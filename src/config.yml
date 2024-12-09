@@ -1,0 +1,8 @@
+name: revo-data
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - numpy
+  - pyspark
+prefix: /opt/homebrew/Caskroom/miniconda/base/envs/revo-data
