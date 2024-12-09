@@ -1,7 +1,7 @@
 name: pre-commit
 
 on:
-  pull_request:
+  push:
     branches:
       - main  # or any other branches you want to trigger the action on
 
