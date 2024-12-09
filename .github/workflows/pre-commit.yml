@@ -1,9 +1,9 @@
 name: pre-commit
 
 on:
-  push:
+  pull_request:
     branches:
-      - main  # or any other branches you want to trigger the action on
+      - ["main"]
 
 jobs:
   pre-commit:
