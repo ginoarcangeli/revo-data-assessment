@@ -1,11 +1,9 @@
 import json
-import shutil
 
+import pyspark.sql.types as T
 import pytest
 from chispa.dataframe_comparer import assert_df_equality
-from notebooks.silver_main import (
-    load_clean_and_save_silver_data,
-)  # Adjust import based on your module structure
+from notebooks.silver_main import load_clean_and_save_silver_data
 from pyspark.sql import SparkSession
 
 
@@ -76,7 +74,60 @@ def setup_files(tmp_path):
     return str(bronze_file_path), str(geojson_file_path), str(silver_file_path)
 
 
-def test_load_clean_and_save_silver_data(spark, setup_files):
+def test_load_clean_and_save_silver_data(spark: SparkSession, setup_files: tuple):
+    """
+    Integration test for the load_clean_and_save_silver_data function.
+
+    This test verifies the end-to-end functionality of the
+    load_clean_and_save_silver_data function. It checks whether the
+    function correctly loads data from a bronze Parquet file, cleans and fills
+    missing postal codes using a GeoJSON file, and saves the processed data to
+    a silver Parquet file. The test ensures that the resultant DataFrame matches
+    the expected output in terms of data accuracy and format.
+
+    Parameters
+    ----------
+    spark : SparkSession
+        A pytest fixture providing a Spark session for the test.
+    setup_files : tuple
+        A pytest fixture that sets up temporary file paths for the bronze input file,
+        GeoJSON file, and output silver file.
+
+    Example Data
+    ------------
+    Bronze Input Data:
+    | postcode | monetary   | longitude | latitude |
+    |----------|------------|-----------|----------|
+    | "1234AB" | "€1,000.00"| 4.897     | 52.377   |
+    | None     | "$1,100.00"| 4.898     | 52.378   |
+
+    GeoJSON Data
+    Contains postal code boundaries used to fill missing postal codes.
+
+    Expected Silver Output Data:
+    | postcode | monetary | longitude | latitude |
+    |----------|----------|-----------|----------|
+    | "1234AB" | 1000.0   | 4.897     | 52.377   |
+    | "1234"   | 1100.0   | 4.898     | 52.378   |
+
+    Steps
+    -----
+    1. Calls load_clean_and_save_silver_data with the provided paths and Spark session.
+    2. Asserts that the function returns True, indicating successful execution.
+    3. Loads the resulting silver Parquet file into a DataFrame.
+    4. Compares the DataFrame with expected data using chispa's assert_df_equality
+        function.
+
+    Assertions
+    ----------
+    - Verifies that the function executes without error.
+    - Ensures the output DataFrame matches the expected data in content and schema.
+
+    Notes
+    -----
+    - Utilizes the chispa library for robust DataFrame comparison.
+    - Temporary files are used for testing to ensure no side effects on actual data.
+    """
     bronze_file_path, geojson_path, silver_file_path = setup_files
 
     # Run the integration test
@@ -105,13 +156,16 @@ def test_load_clean_and_save_silver_data(spark, setup_files):
             52.378,
         ),  # Filled postal code from geojson and converted monetary.
     ]
-    expected_schema = (
-        "postcode STRING, monetary DOUBLE, longitude DOUBLE, latitude DOUBLE"
+    expected_schema = T.StructType(
+        [
+            T.StructField("postcode", T.StringType(), True),
+            T.StructField("monetary", T.DoubleType(), True),
+            T.StructField("longitude", T.DoubleType(), True),
+            T.StructField("latitude", T.DoubleType(), True),
+        ]
     )
+
     expected_df = spark.createDataFrame(expected_data, schema=expected_schema)
 
     # Use chispa to assert DataFrame equality
     assert_df_equality(df_silver, expected_df, ignore_nullable=True)
-
-    # Clean up files if needed (e.g., in non-temporary testing environments)
-    shutil.rmtree(silver_file_path, ignore_errors=True)
