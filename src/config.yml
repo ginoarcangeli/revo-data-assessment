@@ -2,7 +2,12 @@ name: revo-data
 channels:
   - defaults
 dependencies:
-  - python=3.8
+  - python=3.9
   - numpy
   - pyspark
+  - ipykernel
+  - conda-forge::googlemaps
+  - fiona
+  - conda-forge::geopandas
+  - conda-forge::pytest
 prefix: /opt/homebrew/Caskroom/miniconda/base/envs/revo-data
