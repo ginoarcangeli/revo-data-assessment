@@ -1,7 +1,7 @@
 import logging
 
+from notebooks.utils.silver_utils import clean_and_fill_data
 from pyspark.sql import SparkSession
-from utils.silver_utils import clean_and_fill_data
 
 # Configure logging to print to stdout
 logging.basicConfig(

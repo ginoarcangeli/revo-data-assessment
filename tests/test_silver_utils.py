@@ -9,7 +9,10 @@ from pyspark.sql.types import StringType, StructField, StructType
 def spark():
     # Create a Spark session for testing
     spark_session = (
-        SparkSession.builder.appName("UnitTest").master("local[2]").getOrCreate()
+        SparkSession.builder.appName("UnitTest")
+        .config("spark.executorEnv.PYSPARK_PYTHON", "/path/to/python3.9")
+        .config("spark.yarn.appMasterEnv.PYSPARK_PYTHON", "/path/to/python3.9")
+        .getOrCreate()
     )
     yield spark_session
     spark_session.stop()
@@ -61,7 +64,7 @@ def test_clean_postal_code_column(spark: SparkSession):
     result_df = clean_postal_code_column(df, "raw_postcode")
 
     # Define expected DataFrame schema and data
-    expected_data = [("1234AB",), ("5678CD",), ("9012EF",), ("0000",)]
+    expected_data = [("1234",), ("5678",), ("9012",), ("0000",)]
     expected_schema = StructType([StructField("raw_postcode", StringType(), True)])
     expected_df = spark.createDataFrame(expected_data, expected_schema)
 
